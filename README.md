@@ -44,6 +44,7 @@ We have created a simplified version of the dataset, which contains the followin
 ## Usage
 
 ## Running Tests
+To run the unit tests open `testing.py`, this should contain all the unit tests for this project. If no errors are asserted, then everything works:thumbsup:, yay!
 
 ## Maintainers
 
