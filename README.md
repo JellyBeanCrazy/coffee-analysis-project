@@ -50,5 +50,6 @@ We have created a simplified version of the dataset, which contains the followin
 ## Licence
 
 ## Authors
+Lee Baker, Lilia, Penelope, Professor Xavier, school of X
 
 ## Acknowledgements
