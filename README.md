@@ -43,6 +43,9 @@ We have created a simplified version of the dataset, which contains the followin
 
 ## Usage
 
+THis program is intended to bee used to find the optimal country for coffee buyers to visit based on the coffee bean quality in each country.
+When run it will show statistics about the quality, processing and type of each been and then it will output which country most of the best fitting beans come from. 
+
 ## Running Tests
 
 ## Maintainers
