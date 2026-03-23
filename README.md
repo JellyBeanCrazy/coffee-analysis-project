@@ -48,6 +48,7 @@ We have created a simplified version of the dataset, which contains the followin
 ## Maintainers
 
 ## Licence
+This project is licensed under the MIT License.
 
 ## Authors
 
