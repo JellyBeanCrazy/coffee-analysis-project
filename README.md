@@ -52,6 +52,7 @@ To run the unit tests open `testing.py`, this should contain all the unit tests 
 ## Maintainers
 
 ## Licence
+This project is licensed under the MIT License.
 
 ## Authors
 Lee Baker, Lilia, Penelope, Xavier
