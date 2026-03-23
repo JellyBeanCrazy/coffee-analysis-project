@@ -54,5 +54,6 @@ To run the unit tests open `testing.py`, this should contain all the unit tests 
 ## Licence
 
 ## Authors
+Lee Baker, Lilia, Penelope, Xavier
 
 ## Acknowledgements
