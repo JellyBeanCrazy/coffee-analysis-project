@@ -42,6 +42,22 @@ moisture
 df = pd.read_csv("data/simplified_coffee_ratings.csv")
 # print(df)
 
+def histogram(data,
+              col,
+              bins=100,
+              figsize=(5,4),
+              dpi=100):
+    fig = Figure(figsize=figsize, dpi=dpi)
+    ax = fig.add_subplot(111)
+    ax.hist(data, bins=bins, color="#4C72C0", edgecolor="black", alpha=0.8)
+    ax.set_title(f"Distribution of {col}")
+    ax.set_xlabel(col)
+    ax.set_ylabel("Count")
+    ax.grid(axis="y", alpha=0.3)
+    fig.tight_layout()
+
+    return fig
+
 def plot():
     # Clear any previous canvas widgets if desired
     for child in window.winfo_children():
@@ -56,25 +72,17 @@ def plot():
     # Prepare data (e.g. drop NaNs)
     data = pd.to_numeric(df[col], errors="coerce").dropna()
     
-    # Create figure and histogram
-    fig = Figure(figsize=(5, 4), dpi=100)
-    ax = fig.add_subplot(111)
-    ax.hist(data, bins=30, color="#4C72C0", edgecolor="black", alpha=0.8)
-    ax.set_title(f"Distribution of {col}")
-    ax.set_xlabel(col)
-    ax.set_ylabel("Count")
-    ax.grid(axis="y", alpha=0.3)
-    fig.tight_layout()
-
-    
+    # Create figure and histogram [MAKE THIS SECTION MODULAR]
+    fig = histogram(data, col)
 
     # Draw matplotlib figure to Tkinter canvas
     canvas = FigureCanvasTkAgg(fig, master = window)  
     canvas.draw()
     canvas.get_tk_widget().pack()
     
-    # toolbar = NavigationToolbar2Tk(canvas, window)
-    # toolbar.update()
+    #toolbar = NavigationToolbar2Tk(canvas, window)
+    #toolbar.update()
+    #canvas.get_tk_widget().pack()
     
 # The main tkinter window
 window = tk.Tk()
