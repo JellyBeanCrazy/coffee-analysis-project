@@ -25,9 +25,8 @@ def analysis(df):
     
     country_stats = df.groupby('country_of_origin').agg({
         **{feat: 'mean' for feat in all_metrics},
-        'flavor': 'std', # Reliability metric
         'country_of_origin': 'count'
-    }).rename(columns={'country_of_origin': 'producer_count', 'flavor': 'flavor_std'})
+    }).rename(columns={'country_of_origin': 'producer_count'})
 
     # 4. Normalization (0.0 to 1.0 scale)
     # This ensures a '9' in Flavor is compared fairly against a '500' in Producer Count
@@ -44,8 +43,7 @@ def analysis(df):
     strategy_sum = (
         stats_norm['process_score'] + 
         stats_norm['caffeine_score'] + 
-        stats_norm['producer_count'] +
-        stats_norm['flavor_std'].fillna(0)
+        stats_norm['producer_count']
     )
 
     country_stats['final_score'] = primary_sum + secondary_sum + strategy_sum
