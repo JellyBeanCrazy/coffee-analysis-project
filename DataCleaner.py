@@ -2,9 +2,6 @@ import pandas
 
 df = pandas.read_csv('data/simplified_coffee_ratings.csv')
 
-# Drop any rows that do not have a country
-df.dropna(subset=["country_of_origin","species"],inplace=True)
-
 # Drop lot_number column as more than 70% of the values are missing
 df.drop(columns=['lot_number'],inplace=True)
 
@@ -19,8 +16,9 @@ df.dropna(subset=["country_of_origin","species","owner"],inplace=True)
 df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
 # Convert all bag_weight in pounds to kgs and remove string
-weights = df["bag_weight"]
-for weight in weights:
+def convert_bag_weight(weight):
+    if pandas.isna(weight):
+        return pandas.NA
     pounds = False
     str_len = len(weight)
     weight_ints = ""
@@ -29,11 +27,21 @@ for weight in weights:
             pounds = True
         if char.is_integer():
             weight_ints += char
+    if weight_ints == "":
+        return pandas.NA
     weight_value = float(weight_ints)
     if pounds:
-        weight = int(weight_value/2.2)
-    else:
-        weight = int(weight_value)
+        weight_value = int(weight_value/2.2)
+    return weight_value
+
+df["bag_weight"] = df["bag_weight"].apply(convert_bag_weight)
+
+# Get rid of outliers
+quartiles = df["bag_weight"].quantile([0.25,0.75])
+outlier_bound = quartiles[1] + (quartiles[1] - quartiles[0]) * 1.5
+df.loc[df['bag_weight_kg'] > outlier_bound, 'bag_weight_kg'] = pandas.NA
+
+
 
 # List of columns with number values
 int_cols = ["number_of_bags", "bag_weight", "aroma", "flavor","aftertaste","acidity","body","balance","uniformity","clean_cup","sweetness","cupper_points","moisture"]
