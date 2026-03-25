@@ -48,5 +48,14 @@ def analysis(df):
 
     country_stats['final_score'] = primary_sum + secondary_sum + strategy_sum
 
+    # --- NEW: SAVE TO FILE ---
+    # Round to 2 decimals so the table looks clean
+    html_output = country_stats.round(2).sort_values('final_score', ascending=False).to_html()
+    
+    with open("coffee_analysis_full_report.html", "w") as f:
+        f.write("<html><head><title>Coffee Country Analysis</title></head><body>")
+        f.write("<h1>Full Country Ranking</h1>")
+        f.write(html_output)
+        f.write("</body></html>")
     # 6. Return Top 5 sorted by Final Score
     return country_stats.sort_values('final_score', ascending=False).head(5)

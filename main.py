@@ -7,7 +7,9 @@ results = analysis(df)
 print("--- Top 5 Recommended Countries ---")
 print(results[['final_score', 'producer_count', 'flavor', 'aroma', 'body', 'uniformity', 'cupper_points', 'aftertaste',
        'acidity', 'balance', 'clean_cup', 'sweetness', 'moisture', 'process_score', 'caffeine_score']])
-
+# Save the Top 5 specifically
+results.to_csv("top_5_countries.csv")
+print("\nResults successfully saved to 'top_5_countries.csv'")
 # Optional: Access just the #1 recommendation
 best_country = results.index[0]
 print(f"\nThe best country to send the buyer to is: {best_country}")
