@@ -59,7 +59,7 @@ def plot():
     # Create figure and histogram
     fig = Figure(figsize=(5, 4), dpi=100)
     ax = fig.add_subplot(111)
-    ax.hist(data, bins=30, color="#4C72B0", edgecolor="black", alpha=0.9)
+    ax.hist(data, bins=30, color="#4C72C0", edgecolor="black", alpha=0.8)
     ax.set_title(f"Distribution of {col}")
     ax.set_xlabel(col)
     ax.set_ylabel("Count")
@@ -73,9 +73,8 @@ def plot():
     canvas.draw()
     canvas.get_tk_widget().pack()
     
-    toolbar = NavigationToolbar2Tk(canvas, window)
-    toolbar.update()
-    canvas.get_tk_widget().pack()
+    # toolbar = NavigationToolbar2Tk(canvas, window)
+    # toolbar.update()
     
 # The main tkinter window
 window = tk.Tk()
@@ -87,7 +86,7 @@ label = ttk.Label(window, text = "Select graph")
 label.pack(pady=5)
 
 n = tk.StringVar()
-plotchoosen = ttk.Combobox(window, width = 27, textvariable = n)
+plotchoosen = ttk.Combobox(window, width = 27, textvariable = n, state="readonly")
 plotchoosen['values'] = ('aroma',
                          'flavor',
                          'aftertaste',
