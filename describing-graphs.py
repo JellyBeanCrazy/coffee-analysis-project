@@ -58,8 +58,6 @@ plt.show()
 
 
 # RADAR CHART
-import numpy as np
-import matplotlib.pyplot as plt
 
 # Random data
 categories = ['A', 'B', 'C', 'D', 'E']
@@ -87,8 +85,6 @@ plt.show()
 
 # HEATMAP
 import geopandas as gpd
-import matplotlib.pyplot as plt
-import numpy as np
 
 # Load world countries from URL (no geodatasets needed)
 world_map = gpd.read_file("https://naturalearth.s3.amazonaws.com/110m_cultural/ne_110m_admin_0_countries.zip")
