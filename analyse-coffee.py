@@ -102,3 +102,29 @@ plt.figtext(0.5, 0.01,
     " A larger shaded area overall means higher values across all categories.",
     ha="center", wrap=True)
 plt.show()
+
+
+
+# Heatmap
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Load world countries from URL (no geodatasets needed)
+world_map = gpd.read_file("https://naturalearth.s3.amazonaws.com/110m_cultural/ne_110m_admin_0_countries.zip")
+
+# Dummy data
+world_map['dummy_score'] = np.random.rand(len(world_map))
+
+fig, ax = plt.subplots(figsize=(8, 4))
+
+world_map.plot(ax=ax, column='dummy_score', cmap='Reds', legend=True,
+               edgecolor='black', linewidth=0.5)
+
+plt.title('World Heatmap Example')
+plt.axis("off")
+plt.figtext(0.5, 0.01,
+    "Each country is shaded based on its score. The darker the colour, the higher "
+    "the value for that country. Grey countries have no data available.",
+    ha="center", wrap=True)
+plt.show()
