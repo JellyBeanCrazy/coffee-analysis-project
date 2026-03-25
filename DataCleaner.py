@@ -1,4 +1,6 @@
 import pandas
+import re
+
 
 df = pandas.read_csv('data/simplified_coffee_ratings.csv')
 
@@ -41,7 +43,21 @@ quartiles = df["bag_weight"].quantile([0.25,0.75])
 outlier_bound = quartiles[1] + (quartiles[1] - quartiles[0]) * 1.5
 df.loc[df['bag_weight_kg'] > outlier_bound, 'bag_weight_kg'] = pandas.NA
 
-
+# Make harvest year into a singular integer year (or NA)
+def get_harvest_year(data):
+    if pandas.isna():
+        return pandas.NA
+    match = re.search(r'\b(19|20)\d{2}\b', str(data))
+    if match:
+        data = int(match.group)
+    else:
+        match = re.search(r'\b\d{2})\b', str(data))
+        if match:
+            data = 2000 + int(match.group())
+        else:
+            data = pandas.NA
+    return data
+df["harvest_year"] = df["harvest_year"].apply(get_harvest_year)
 
 # List of columns with number values
 int_cols = ["number_of_bags", "bag_weight", "aroma", "flavor","aftertaste","acidity","body","balance","uniformity","clean_cup","sweetness","cupper_points","moisture"]
