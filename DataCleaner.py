@@ -1,7 +1,9 @@
+# For processing data
 import pandas
+# For matching regex of years for harvest_year and altitude ranges
 import re
 
-
+# Opens the CSV file
 df = pandas.read_csv('data/simplified_coffee_ratings.csv')
 
 # Drop lot_number column as more than 70% of the values are missing
@@ -58,6 +60,58 @@ def get_harvest_year(data):
             data = pandas.NA
     return data
 df["harvest_year"] = df["harvest_year"].apply(get_harvest_year)
+
+# Clean up altitude into a single number measured in meters
+def parse_altitudes(data):
+    if pandas.isna(data):
+        return pandas.NA
+    s = str(data).strip().lower()
+    # Random strings that don't contain an altitude
+    if re.fullmatch(r'[a-z\s]+', s):
+        return pandas.NA
+    # Check if it's in feet
+    is_feet = bool(re.search(r'\bft\.?|\bfeet\b|\bpies\b|\b\ds*f\b', s))
+    # Strip all unit words and stray characters
+    s = re.sub(
+        r'meters?|metros?|msnm|m\.s\.n\.m\.?|masl|mals?|msnn?|msm|mosl|metres above sea level:'
+        r'mts\.?|m\.o\.s\.l\.?|m\.s\.l\.?|psnm|p\.s\.n\.m\.?|psn|'
+        r'above|approx\.?|between|and|thru|on average|'
+        r'公尺|nivel del mar|sobre el nivel del mar|a\.s\.l\.?|'
+        r'feet|ft\.?|pies|\bf\b',
+        ' ', s
+    )
+
+    # Remove apostrophe/quote used as thousands separator (e.g. 1'500)
+    s = re.sub(r"'", '', s)
+    
+    # Strip leftover non-numeric characters except digits, dot, hyphen, space, tilde
+    s = re.sub(r'[^\d\.\-\s~]', ' ', s).strip()
+    
+    # Extract all numbers
+    numbers = [float(n) for n in re.findall(r'\d+\.?\d*', s)]
+    
+    if not numbers:
+        return pandas.NA
+    
+    # Take midpoint of any range, or the single value
+    data = sum(numbers) / len(numbers)
+
+    # Convert feet to m
+    if is_feet:
+        data *= 0.3048
+
+    # Likely to be km, convert to m
+    if data < 10:
+        data *= 1000
+    
+    # Coffee will not grow below sea level, nor will it grow over more than 4000m, these must be outliers
+    if data > 4000 or data <= 0:
+        return pandas.NA
+    
+    data = round(data)
+
+    return data
+df["altitude"] = df["altitude"].apply(parse_altitudes)
 
 # List of columns with number values
 int_cols = ["number_of_bags", "bag_weight", "aroma", "flavor","aftertaste","acidity","body","balance","uniformity","clean_cup","sweetness","cupper_points","moisture"]
