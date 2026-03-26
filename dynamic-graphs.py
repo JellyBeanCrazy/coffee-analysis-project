@@ -51,7 +51,7 @@ def histogram(data,
               figsize=(5,4),
               dpi=100,
               color="#4C72C0"):
-      """
+    """
     Creates a histogram chart for a given column of data. A histogram shows 
     how frequently different values appear — for example, how many coffees 
     scored between 7 and 8 for aroma. The bars are grouped into ranges, and 
@@ -107,7 +107,7 @@ def bar_chart(data,
 def worldmap(df,
              figsize=(6, 4),
              dpi=200):
-      """
+    """
     Creates a world heatmap where each country is shaded based on a score.
     The darker the colour, the higher the value for that country. Currently 
     uses dummy/random data as a placeholder until the real coffee data is 
