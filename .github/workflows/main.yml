@@ -24,4 +24,4 @@ steps:
 
   - name: Test with pytest
     run: |
-      python -m pytest -v tests/test_graphs.py
+      python -m pytest -v tests/test_dataframe.py
