@@ -1,10 +1,19 @@
-# For processing data
 import pandas
-# For matching regex of years for harvest_year and altitude ranges
 import re
 
-# Convert all bag_weight in pounds to kgs and remove string
 def convert_bag_weight(weight):
+    """
+    Converts a bag weight value into a single number measured in kilograms. 
+    Handles cases where the weight is given in pounds by converting it to kg. 
+    If the value is missing or contains no recognisable number, it is returned 
+    as empty.
+
+    Parameters:
+        weight (str): The raw bag weight value from the CSV, for example "60kg" or "132 lbs".
+
+    Returns:
+        float: The weight in kilograms, or NA if the value could not be converted.
+    """
     if pandas.isna(weight):
         return pandas.NA
     pounds = False
@@ -22,8 +31,19 @@ def convert_bag_weight(weight):
         weight_value = int(weight_value/2.2)
     return weight_value
 
-# Make harvest year into a singular integer year (or NA)
+
 def get_harvest_year(data):
+    """
+    Extracts a single 4-digit harvest year from a raw value that may be in a 
+    variety of formats, for example "2019", "19/20", or "March 2018". If no 
+    recognisable year can be found, the value is returned as empty.
+
+    Parameters:
+        data: The raw harvest year value from the CSV.
+
+    Returns:
+        int: The harvest year as a 4-digit number, or NA if no year could be found.
+    """
     if pandas.isna():
         return pandas.NA
     match = re.search(r'\b(19|20)\d{2}\b', str(data))
@@ -37,17 +57,29 @@ def get_harvest_year(data):
             data = pandas.NA
     return data
 
-# Clean up altitude into a single number measured in meters
 def parse_altitudes(data):
+    """
+    Converts a raw altitude value into a single number measured in meters. 
+    Handles a wide variety of formats including ranges (e.g. "1500-1700m"), 
+    values given in feet, and values given in kilometers. Altitudes that are 
+    clearly incorrect (below sea level or above 4000m) are returned as empty 
+    as coffee cannot grow at those heights.
+
+    Parameters:
+        data: The raw altitude value from the CSV, for example "1500m", "4921 feet", or "1.5km".
+
+    Returns:
+        int: The altitude in meters rounded to the nearest whole number, or NA if 
+        the value could not be converted or is outside the valid range.
+    """
     if pandas.isna(data):
         return pandas.NA
     s = str(data).strip().lower()
-    # Random strings that don't contain an altitude
+
     if re.fullmatch(r'[a-z\s]+', s):
         return pandas.NA
-    # Check if it's in feet
+
     is_feet = bool(re.search(r'\bft\.?|\bfeet\b|\bpies\b|\b\ds*f\b', s))
-    # Strip all unit words and stray characters
     s = re.sub(
         r'meters?|metros?|msnm|m\.s\.n\.m\.?|masl|mals?|msnn?|msm|mosl|metres above sea level:'
         r'mts\.?|m\.o\.s\.l\.?|m\.s\.l\.?|psnm|p\.s\.n\.m\.?|psn|'
@@ -57,30 +89,23 @@ def parse_altitudes(data):
         ' ', s
     )
 
-    # Remove apostrophe/quote used as thousands separator (e.g. 1'500)
     s = re.sub(r"'", '', s)
     
-    # Strip leftover non-numeric characters except digits, dot, hyphen, space, tilde
     s = re.sub(r'[^\d\.\-\s~]', ' ', s).strip()
     
-    # Extract all numbers
     numbers = [float(n) for n in re.findall(r'\d+\.?\d*', s)]
     
     if not numbers:
         return pandas.NA
     
-    # Take midpoint of any range, or the single value
     data = sum(numbers) / len(numbers)
 
-    # Convert feet to m
     if is_feet:
         data *= 0.3048
 
-    # Likely to be km, convert to m
     if data < 10:
         data *= 1000
     
-    # Coffee will not grow below sea level, nor will it grow over more than 4000m, these must be outliers
     if data > 4000 or data <= 0:
         return pandas.NA
     
@@ -88,50 +113,47 @@ def parse_altitudes(data):
 
     return data
 
-# Runs the algorithm to clean a csv file where a csv file is imported
-# This can be used on any csv file in the format of the current coffee-analysis with different data
-# To run, from DataCleaner import * then call data_cleaning_algo(<insert csv filepath here>)
 def data_cleaning_algo(csv_file_path):
-    # Opens the CSV file
+    """
+    Runs the full data cleaning process on a coffee ratings CSV file and returns 
+    a cleaned version of the data. This includes removing duplicate and unnecessary 
+    columns, dropping rows with critical missing values, standardising bag weights 
+    and altitudes to consistent units, extracting valid harvest years, and filling 
+    in any remaining missing values with either the column average (for numerical 
+    columns) or "unknown" (for text columns).
+
+    Parameters:
+        csv_file_path (str): The file path to the CSV file to be cleaned, 
+        for example "data/simplified_coffee_ratings.csv".
+
+    Returns:
+        pd.DataFrame: The cleaned version of the dataset, ready for analysis.
+    """
     df = pandas.read_csv(csv_file_path)
 
-    # Drop lot_number column as more than 70% of the values are missing
     df.drop(columns=['lot_number'],inplace=True)
 
-    # Get rid of duplicate columns (owner/owner_1) but make sure no gaps are left
     df['owner'] = df['owner'].fillna(df['owner_1'])
     df.drop(columns=['owner_1'],inplace=True)
 
-    # Drop any rows that do not have a country, species or owner
     df.dropna(subset=["country_of_origin","species","owner"],inplace=True)
-
-    # Get rid of whitespace
     df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
-    # Converts bag_weights to kgs
     df["bag_weight"] = df["bag_weight"].apply(convert_bag_weight)
 
-    # Get rid of outliers
     quartiles = df["bag_weight"].quantile([0.25,0.75])
     outlier_bound = quartiles[1] + (quartiles[1] - quartiles[0]) * 1.5
     df.loc[df['bag_weight_kg'] > outlier_bound, 'bag_weight_kg'] = pandas.NA
 
-    # Starts cleaning harvest_year
     df["harvest_year"] = df["harvest_year"].apply(get_harvest_year)
-
-    # Starts cleaning altitude
     df["altitude"] = df["altitude"].apply(parse_altitudes)
 
-    # List of columns with number values
     int_cols = ["number_of_bags", "bag_weight", "altitude", "aroma", "flavor","aftertaste","acidity","body","balance","uniformity","clean_cup","sweetness","cupper_points","moisture"]
-    # Get mean of each column and replace any empty values with it
     for col_name in int_cols:
         mean = df[col_name].mean()
         df.fillna({col_name: mean}, inplace=True)
 
-    # List of columns with string values
     str_cols = ["farm_name","mill","company","region","producer", "in_country_partner", "harvest_year", "grading_date", "variety", "processing_method"]
-    # Replace empty values with "Unknown" for string columns
     for col_name in str_cols:
         df.fillna({col_name: "unknown"}, inplace=True)
 
