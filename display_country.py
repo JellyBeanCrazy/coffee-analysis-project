@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 
-
 def analysis(df, top_N):
     # 1. Define Priority Tiers
     # Primary: Core buyer requirements + Cupper Points (Weight 1.0)    primary_quality = ['flavor', 'aroma', 'body', 'uniformity', 'cupper_points']
