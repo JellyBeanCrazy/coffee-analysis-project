@@ -33,22 +33,34 @@ def run_parameter_sweep(df, iterations=50):
         for country, row in results.iterrows():
             all_scores[country] = all_scores.get(country, []) + [row['final_score']]
 
-    # Calculate Average Scores
-    avg_scores = {country: np.mean(scores) for country, scores in all_scores.items()}
-    sorted_avg = pd.Series(avg_scores).sort_values(ascending=False).head(10)
 
-    plot_results(sorted_avg)
+    avg_scores = {country: np.mean(scores) for country, scores in all_scores.items()}
+    
+    sorted_avg = pd.DataFrame.from_dict(avg_scores, orient='index', columns=['avg_score'])
+    
+    sorted_avg = sorted_avg.sort_values(by='avg_score', ascending=False).head(10)
+
     return sorted_avg
 
-def plot_results(series):
-    plt.figure(figsize=(10, 6))
-    series.plot(kind='bar', color='skyblue', edgecolor='navy')
-    plt.title("Stability Analysis: Average Country Scores across Parameter Sweep")
-    plt.xlabel("Country of Origin")
-    plt.ylabel("Average Final Score")
+def plot_results(df):
+    plt.figure(figsize=(12, 6))
+    
+    # Identify the column to plot. 
+    # If you didn't name it, it might be 0 or 'final_score'
+    score_col = df.columns[0] 
+    
+    # Plot using the DataFrame method
+    df[score_col].plot(kind='bar', color='skyblue', edgecolor='navy')
+    
+    plt.title("Stability Analysis: Average Country Scores", fontsize=14)
+    plt.xlabel("Country of Origin", fontsize=12)
+    plt.ylabel("Average Final Score", fontsize=12)
     plt.xticks(rotation=45)
+    
+    # Add data labels on top of bars for clarity
+    for i, v in enumerate(df[score_col]):
+        plt.text(i, v + 0.01, f"{v:.2f}", ha='center', fontweight='bold')
+        
     plt.tight_layout()
     plt.savefig("coffee_stability_plot.png")
-    print("\nGraph saved as 'coffee_stability_plot.png'")
     plt.show()
-
