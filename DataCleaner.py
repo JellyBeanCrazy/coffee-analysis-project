@@ -22,7 +22,7 @@ def convert_bag_weight(weight):
     for char in weight:
         if char in "lbs":
             pounds = True
-        if char.is_integer():
+        if char in "0123456789":
             weight_ints += char
     if weight_ints == "":
         return pandas.NA
@@ -33,45 +33,21 @@ def convert_bag_weight(weight):
 
 
 def get_harvest_year(data):
-    """
-    Extracts a single 4-digit harvest year from a raw value that may be in a 
-    variety of formats, for example "2019", "19/20", or "March 2018". If no 
-    recognisable year can be found, the value is returned as empty.
-
-    Parameters:
-        data: The raw harvest year value from the CSV.
-
-    Returns:
-        int: The harvest year as a 4-digit number, or NA if no year could be found.
-    """
-    if pandas.isna():
+    if pandas.isna(data):
         return pandas.NA
     match = re.search(r'\b(19|20)\d{2}\b', str(data))
     if match:
-        data = int(match.group)
+        data = int(match.group())
     else:
-        match = re.search(r'\b\d{2})\b', str(data))
+        match = re.search(r'\b\d{2}\b', str(data))
         if match:
             data = 2000 + int(match.group())
         else:
             data = pandas.NA
     return data
 
-def parse_altitudes(data):
-    """
-    Converts a raw altitude value into a single number measured in meters. 
-    Handles a wide variety of formats including ranges (e.g. "1500-1700m"), 
-    values given in feet, and values given in kilometers. Altitudes that are 
-    clearly incorrect (below sea level or above 4000m) are returned as empty 
-    as coffee cannot grow at those heights.
-
-    Parameters:
-        data: The raw altitude value from the CSV, for example "1500m", "4921 feet", or "1.5km".
-
-    Returns:
-        int: The altitude in meters rounded to the nearest whole number, or NA if 
-        the value could not be converted or is outside the valid range.
-    """
+# Clean up altitude into a single number measured in meters
+def parse_altitudes(data) -> int:
     if pandas.isna(data):
         return pandas.NA
     s = str(data).strip().lower()
@@ -113,6 +89,20 @@ def parse_altitudes(data):
 
     return data
 
+def remove_outliers_iqr(df, column="bag_weight"):
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
+    IQR = Q3 - Q1
+
+    upper_bound = Q3 + 1.5 * IQR
+
+    filtered_df = df[(df[column] <= upper_bound)]
+
+    return filtered_df
+
+# Runs the algorithm to clean a csv file where a csv file is imported
+# This can be used on any csv file in the format of the current coffee-analysis with different data
+# To run, from DataCleaner import * then call data_cleaning_algo(<insert csv filepath here>)
 def data_cleaning_algo(csv_file_path):
     """
     Runs the full data cleaning process on a coffee ratings CSV file and returns 
@@ -137,20 +127,23 @@ def data_cleaning_algo(csv_file_path):
     df.drop(columns=['owner_1'],inplace=True)
 
     df.dropna(subset=["country_of_origin","species","owner"],inplace=True)
-    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
+    # Converts bag_weights to kgs
     df["bag_weight"] = df["bag_weight"].apply(convert_bag_weight)
 
-    quartiles = df["bag_weight"].quantile([0.25,0.75])
-    outlier_bound = quartiles[1] + (quartiles[1] - quartiles[0]) * 1.5
-    df.loc[df['bag_weight_kg'] > outlier_bound, 'bag_weight_kg'] = pandas.NA
+    # Get rid of outliers
+    # df = remove_outliers_iqr(df,"bag_weight")
 
     df["harvest_year"] = df["harvest_year"].apply(get_harvest_year)
-    df["altitude"] = df["altitude"].apply(parse_altitudes)
+
+    # Starts cleaning altitude
+    df["altitude"] = df["altitude"].apply(parse_altitudes).astype("Int64")
 
     int_cols = ["number_of_bags", "bag_weight", "altitude", "aroma", "flavor","aftertaste","acidity","body","balance","uniformity","clean_cup","sweetness","cupper_points","moisture"]
     for col_name in int_cols:
         mean = df[col_name].mean()
+        if (col_name == "altitude"):
+            mean = round(mean)
         df.fillna({col_name: mean}, inplace=True)
 
     str_cols = ["farm_name","mill","company","region","producer", "in_country_partner", "harvest_year", "grading_date", "variety", "processing_method"]

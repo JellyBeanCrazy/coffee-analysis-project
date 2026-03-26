@@ -1,5 +1,4 @@
 from display_country import analysis 
-# TODO: import DataCleaner.py to clean up db
 
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -7,6 +6,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
 NavigationToolbar2Tk)
 import numpy as np
+import DataCleaner
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
@@ -58,7 +58,8 @@ def open_file_and_show(tree):
     if not path:
         return
     try:
-        df = pd.read_csv(path)
+        df = DataCleaner.data_cleaning_algo(path)
+        # df = pd.read_csv(path)
     except Exception as e:
         messagebox.showerror("Error", f"Failed to read CSV:\n{e}")
         return
@@ -116,8 +117,12 @@ def on_submit():
 
     process_number(val)
 
-df = pd.read_csv(r"data/simplified_coffee_ratings.csv")
-top_N = 5
+# TEST: preload a CSV (optional)
+df = DataCleaner.data_cleaning_algo("data/simplified_coffee_ratings.csv")
+# print(df)
+top_N = 5 # Default: we look for the top 5 countries
+
+df.columns = df.columns.str.strip().str.lower() # Cleans spaces and matches case
 
 df.columns = df.columns.str.strip().str.lower()
 # --- Window setup ---

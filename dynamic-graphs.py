@@ -10,8 +10,41 @@ NavigationToolbar2Tk)
 import tkinter as tk
 from tkinter import ttk
 
+import DataCleaner
+
+""" simplified_coffee_ratings.csv COLUMNS
+species
+owner
+country_of_origin
+farm_name
+lot_number
+mill
+company
+altitude
+region
+producer
+number_of_bags
+bag_weight
+in_country_partner
+harvest_year
+grading_date
+owner_1
+variety
+processing_method
+aroma
+flavor
+aftertaste
+acidity
+body
+balance
+uniformity
+clean_cup
+sweetness
+cupper_points
+moisture           
+"""
 # TEST: Loading db
-df = pd.read_csv("data/simplified_coffee_ratings.csv")
+df = DataCleaner.data_cleaning_algo("data/simplified_coffee_ratings.csv")
 # print(df)
 
 other_columns = ['species',
