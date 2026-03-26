@@ -7,6 +7,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
 NavigationToolbar2Tk)
 import numpy as np
+import DataCleaner
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
@@ -41,7 +42,7 @@ def open_file_and_show(tree):
     if not path:
         return
     try:
-        df = pd.read_csv(path)
+        df = DataCleaner.data_cleaning_algo(path)
     except Exception as e:
         messagebox.showerror("Error", f"Failed to read CSV:\n{e}")
         return
@@ -89,7 +90,7 @@ def on_submit():
     process_number(val)  # pass validated int to your function
 
 # TEST: preload a CSV (optional)
-df = pd.read_csv(r"data/simplified_coffee_ratings.csv")
+df = DataCleaner.data_cleaning_algo("data/simplified_coffee_ratings.csv")
 # print(df)
 top_N = 5 # Default: we look for the top 5 countries
 

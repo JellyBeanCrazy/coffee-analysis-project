@@ -10,6 +10,8 @@ NavigationToolbar2Tk)
 import tkinter as tk
 from tkinter import ttk
 
+import DataCleaner
+
 """ simplified_coffee_ratings.csv COLUMNS
 species
 owner
@@ -42,7 +44,7 @@ cupper_points
 moisture           
 """
 # TEST: Loading db
-df = pd.read_csv("data/simplified_coffee_ratings.csv")
+df = DataCleaner.data_cleaning_algo("data/simplified_coffee_ratings.csv")
 # print(df)
 
 other_columns = ['species',
