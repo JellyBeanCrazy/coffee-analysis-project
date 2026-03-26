@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def analysis(df):
+def analysis(df, top_N):
     # 1. Define Priority Tiers
     # Primary: Core buyer requirements + Cupper Points (Weight 1.0)    primary_quality = ['flavor', 'aroma', 'body', 'uniformity', 'cupper_points']
     primary_quality = ['flavor', 'aroma', 'body', 'uniformity', 'cupper_points']
@@ -57,5 +57,5 @@ def analysis(df):
         f.write("<h1>Full Country Ranking</h1>")
         f.write(html_output)
         f.write("</body></html>")
-    # 6. Return Top 5 sorted by Final Score
-    return country_stats.sort_values('final_score', ascending=False).head(5)
+    # 6. Return Top_N sorted by Final Score
+    return country_stats.sort_values('final_score', ascending=False).head(top_N)
