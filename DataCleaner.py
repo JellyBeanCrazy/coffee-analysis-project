@@ -13,7 +13,7 @@ def convert_bag_weight(weight):
     for char in weight:
         if char in "lbs":
             pounds = True
-        if char.is_integer():
+        if char in "0123456789":
             weight_ints += char
     if weight_ints == "":
         return pandas.NA
@@ -24,13 +24,13 @@ def convert_bag_weight(weight):
 
 # Make harvest year into a singular integer year (or NA)
 def get_harvest_year(data):
-    if pandas.isna():
+    if pandas.isna(data):
         return pandas.NA
     match = re.search(r'\b(19|20)\d{2}\b', str(data))
     if match:
-        data = int(match.group)
+        data = int(match.group())
     else:
-        match = re.search(r'\b\d{2})\b', str(data))
+        match = re.search(r'\b\d{2}\b', str(data))
         if match:
             data = 2000 + int(match.group())
         else:
@@ -38,7 +38,7 @@ def get_harvest_year(data):
     return data
 
 # Clean up altitude into a single number measured in meters
-def parse_altitudes(data):
+def parse_altitudes(data) -> int:
     if pandas.isna(data):
         return pandas.NA
     s = str(data).strip().lower()
@@ -88,6 +88,17 @@ def parse_altitudes(data):
 
     return data
 
+def remove_outliers_iqr(df, column="bag_weight"):
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
+    IQR = Q3 - Q1
+
+    upper_bound = Q3 + 1.5 * IQR
+
+    filtered_df = df[(df[column] <= upper_bound)]
+
+    return filtered_df
+
 # Runs the algorithm to clean a csv file where a csv file is imported
 # This can be used on any csv file in the format of the current coffee-analysis with different data
 # To run, from DataCleaner import * then call data_cleaning_algo(<insert csv filepath here>)
@@ -105,28 +116,25 @@ def data_cleaning_algo(csv_file_path):
     # Drop any rows that do not have a country, species or owner
     df.dropna(subset=["country_of_origin","species","owner"],inplace=True)
 
-    # Get rid of whitespace
-    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
-
     # Converts bag_weights to kgs
     df["bag_weight"] = df["bag_weight"].apply(convert_bag_weight)
 
     # Get rid of outliers
-    quartiles = df["bag_weight"].quantile([0.25,0.75])
-    outlier_bound = quartiles[1] + (quartiles[1] - quartiles[0]) * 1.5
-    df.loc[df['bag_weight_kg'] > outlier_bound, 'bag_weight_kg'] = pandas.NA
+    # df = remove_outliers_iqr(df,"bag_weight")
 
     # Starts cleaning harvest_year
     df["harvest_year"] = df["harvest_year"].apply(get_harvest_year)
 
     # Starts cleaning altitude
-    df["altitude"] = df["altitude"].apply(parse_altitudes)
+    df["altitude"] = df["altitude"].apply(parse_altitudes).astype("Int64")
 
     # List of columns with number values
     int_cols = ["number_of_bags", "bag_weight", "altitude", "aroma", "flavor","aftertaste","acidity","body","balance","uniformity","clean_cup","sweetness","cupper_points","moisture"]
     # Get mean of each column and replace any empty values with it
     for col_name in int_cols:
         mean = df[col_name].mean()
+        if (col_name == "altitude"):
+            mean = round(mean)
         df.fillna({col_name: mean}, inplace=True)
 
     # List of columns with string values

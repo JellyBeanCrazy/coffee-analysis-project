@@ -1,5 +1,4 @@
 from display_country import analysis 
-# TODO: import DataCleaner.py to clean up db
 
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -42,7 +41,8 @@ def open_file_and_show(tree):
     if not path:
         return
     try:
-        df = DataCleaner.data_cleaning_algo(path)
+        # df = DataCleaner.data_cleaning_algo(path)
+        df = pd.read_csv(path)
     except Exception as e:
         messagebox.showerror("Error", f"Failed to read CSV:\n{e}")
         return
