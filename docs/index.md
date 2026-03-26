@@ -1,7 +1,7 @@
 # coffee-analysis
 
 ## Description
-We are a coffee company based in Southampton, UK :uk: , and are looking to improve where we source our coffee from. The quality of coffee :coffee: sourced from our existing suppliers has significantly reduced in recent years, so we want to change suppliers whilst maintaining our reputation as the best artisanal coffee place in town. We have obtained a wealth of coffee supplier data from the independent Coffee Quality Institute, but we lack the skills required to analyse the data to help us decide where to send our coffee buyers to negotiate a new supply.
+We are a coffee company based in Southampton, UK, and are looking to improve where we source our coffee from. The quality of coffee sourced from our existing suppliers has significantly reduced in recent years, so we want to change suppliers whilst maintaining our reputation as the best artisanal coffee place in town. We have obtained a wealth of coffee supplier data from the independent Coffee Quality Institute, but we lack the skills required to analyse the data to help us decide where to send our coffee buyers to negotiate a new supply.
 
 We would like an answer to the following question: <ins>**"Which country should we send our buyers to?”**</ins>
 
@@ -41,15 +41,16 @@ We have created a simplified version of the dataset, which contains the followin
 
 ## Installation
 
-## Usage
 
+## Usage
 This program is intended to be used to find the optimal country for coffee buyers to visit based on the coffee bean quality in each country.
 When run it will show statistics about the quality, processing and type of each bean and then it will output which country most of the best fitting beans come from. 
 
 ## Running Tests
-To run the unit tests open `testing.py`, this should contain all the unit tests for this project. If no errors are asserted, then everything works 👍, yay!
+To run the unit tests open `testing.py`, this should contain all the unit tests for this project. If no errors are asserted, then everything works.
 
 ## Maintainers
+Lee Baker, Lilia, Penelope, Xavier
 
 ## Licence
 This project is licensed under the MIT License.
@@ -59,3 +60,4 @@ We decided that this would be the most appropriate license for this project as i
 Lee Baker, Lilia, Penelope, Xavier
 
 ## Acknowledgements
+Special thank you Philly and Stephen for running this course

@@ -1,0 +1,15 @@
+site_name: Coffee Analysis Project
+
+nav:
+  - Overview: index.md
+  - Installation: installation.md
+  - How to Run: how-to-run.md
+  - API Reference: api.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
