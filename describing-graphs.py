@@ -5,13 +5,11 @@ import geopandas as gpd
 # ------ Description of graphs -------
 # SCATTER PLOT
 
-# This is just a random scatter plot to show how to read it, not based on the actual data
 x = np.random.rand(50)
 y = np.random.rand(50)
 
 plt.scatter(x, y)
 plt.title("Scatter Plot")
-# No real axis labels yet, just a description explaining what a scatter plot shows
 plt.figtext(0.5, 0.01, 
     "If the variables are related, the points will form a pattern. If they aren't "
     "related, the points will be randomly scattered. If as the value of the x variable "
@@ -25,13 +23,11 @@ plt.show()
 
 # BAR CHART
 
-# Random data
 x = ['A', 'B', 'C', 'D', 'E']
 y = np.random.randint(1, 100, 5)
 
 plt.bar(x, y)
 plt.title("Bar Chart")
-# No real axis labels yet
 plt.figtext(0.5, 0.01,
     "Each bar represents a category. The height of the bar shows the value for that "
     "category. The taller the bar, the higher the value. Comparing bar heights allows "
@@ -43,13 +39,11 @@ plt.show()
 
 # PIE CHART
 
-# Random data
 labels = ['A', 'B', 'C', 'D', 'E']
 sizes = np.random.randint(1, 100, 5)
 
 plt.pie(sizes, labels=labels, autopct='%1.1f%%')
 plt.title("Pie Chart")
-# No real axis labels yet
 plt.figtext(0.5, 0.01,
     "Each slice represents a category. The bigger the slice, the larger that category's "
     "share of the total. The percentage shown on each slice tells you exactly what "
@@ -61,11 +55,9 @@ plt.show()
 
 # RADAR CHART
 
-# Random data
 categories = ['A', 'B', 'C', 'D', 'E']
 values = np.random.randint(1, 10, 5).tolist()
 
-# Need to repeat the first value to close the shape
 values += values[:1]
 angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
 angles += angles[:1]
@@ -86,11 +78,8 @@ plt.show()
 
 
 # HEATMAP
-
-# Load world countries from URL (no geodatasets needed)
 world_map = gpd.read_file("https://naturalearth.s3.amazonaws.com/110m_cultural/ne_110m_admin_0_countries.zip")
 
-# Dummy data
 world_map['dummy_score'] = np.random.rand(len(world_map))
 
 fig, ax = plt.subplots(figsize=(8, 4))
