@@ -41,8 +41,8 @@ def open_file_and_show(tree):
     if not path:
         return
     try:
-        # df = DataCleaner.data_cleaning_algo(path)
-        df = pd.read_csv(path)
+        df = DataCleaner.data_cleaning_algo(path)
+        # df = pd.read_csv(path)
     except Exception as e:
         messagebox.showerror("Error", f"Failed to read CSV:\n{e}")
         return
