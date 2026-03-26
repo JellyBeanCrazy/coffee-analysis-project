@@ -1,7 +1,9 @@
-# ------ Description of graphs -------
-# SCATTER PLOT
 import matplotlib.pyplot as plt
 import numpy as np
+import geopandas as gpd
+
+# ------ Description of graphs -------
+# SCATTER PLOT
 
 # This is just a random scatter plot to show how to read it, not based on the actual data
 x = np.random.rand(50)
@@ -84,7 +86,6 @@ plt.show()
 
 
 # HEATMAP
-import geopandas as gpd
 
 # Load world countries from URL (no geodatasets needed)
 world_map = gpd.read_file("https://naturalearth.s3.amazonaws.com/110m_cultural/ne_110m_admin_0_countries.zip")
