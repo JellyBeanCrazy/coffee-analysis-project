@@ -1,15 +1,29 @@
 from display_country import analysis 
 
+import geopandas as gpd
 import pandas as pd
+import numpy as np
+
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
 NavigationToolbar2Tk)
 import numpy as np
+
 import DataCleaner
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
+
+# Define Metric Categories for weighting
+primary_quality = ['flavor', 'aroma', 'body', 'uniformity', 'cupper_points']
+secondary_quality = ['aftertaste', 'acidity', 'balance',
+                     'clean_cup','sweetness', 'moisture']
+strategic_metrics = ['process_score', 'caffeine_score', 'producer_count']
+# Set Default Weights
+weights = {metric: 1.0 for metric in primary_quality}
+weights.update({metric: 0.3 for metric in secondary_quality})
+weights.update({metric: 1.0 for metric in strategic_metrics})
 
 def show_dataframe(df, tree):
     """
@@ -66,7 +80,7 @@ def open_file_and_show(tree):
     show_dataframe(df, tree)
 
 
-def process_number(new_N: int):
+def process_number(new_N: int, weights: dict):
     """
     Takes the number entered by the user and finds the top N recommended 
     countries to source coffee from based on the analysis. The results are 
@@ -80,7 +94,7 @@ def process_number(new_N: int):
     """
     top_N = new_N
     print("Calculating results. . . ")
-    results = analysis(df, top_N)
+    results = analysis(df, top_N, manual_adjustments=False, custom_weights_dict=weights)
 
     print(f"--- Top {top_N} Recommended Countries ---")
     print(results[['final_score', 'producer_count', 'flavor', 'aroma', 'body', 'uniformity', 'cupper_points', 'aftertaste',
@@ -95,6 +109,16 @@ def process_number(new_N: int):
     best_country = results.index[0]
     print(f"\nThe best country to send the buyer to is: {best_country}")
 
+def read_weights(): # on_submit() reads these and calls analysis
+    weights = {}
+    for name, var in weight_vars.items():
+        s = var.get().strip()
+        try:
+            val = float(s)
+        except ValueError:
+            val = weight_fields[name]   # fallback to default
+        weights[name] = val
+    return weights
 
 def on_submit():
     """
@@ -114,8 +138,8 @@ def on_submit():
     if not (MIN <= val <= MAX):
         messagebox.showerror("Out of range", f"Enter an integer between {MIN} and {MAX}.")
         return
-
-    process_number(val)
+    weights = read_weights()
+    process_number(new_N=val, weights=weights)
 
 # TEST: preload a CSV (optional)
 df = DataCleaner.data_cleaning_algo("data/simplified_coffee_ratings.csv")
@@ -125,43 +149,67 @@ top_N = 5 # Default: we look for the top 5 countries
 df.columns = df.columns.str.strip().str.lower() # Cleans spaces and matches case
 
 df.columns = df.columns.str.strip().str.lower()
+
 # --- Window setup ---
 window = tk.Tk()
-window.title('CSV Viewer')
-window.geometry("900x500")
+window.title('Coffee Analysis Application Ltd.')
+window.geometry("900x600")
 # --- Toolbar ---
 toolbar = ttk.Frame(window)
 toolbar.pack(fill="x", padx=4, pady=4)
-# --- Table with scrollbars ---
-tree_frame = tk.Frame(window)
-tree_frame.pack(fill="both", expand=True, padx=4, pady=4)
-
-vsb = ttk.Scrollbar(tree_frame, orient="vertical")
-hsb = ttk.Scrollbar(tree_frame, orient="horizontal")
-tree = ttk.Treeview(tree_frame, show="headings", yscrollcommand=vsb.set, xscrollcommand=hsb.set)
-vsb.config(command=tree.yview)
-hsb.config(command=tree.xview)
-
+# --- Load/Open CSV button ---
 open_btn = tk.Button(toolbar,
                      text="Open CSV",
                      command=lambda:
                      open_file_and_show(tree)
 )
 open_btn.pack(side="left")
-# --- Input fields ---
-label = tk.Label(text="Search for top suppliers/countries:")
-label.pack(padx=10, pady=(10,0))
+# --- Table with scrollbars ---
+tree_frame = tk.Frame(window)
+tree_frame.pack(fill="both", expand=True, padx=4, pady=4)
 
-entry = tk.Entry()
-entry.pack(padx=10, pady=5)
-entry.focus_set()
-
-tk.Button(text="Submit", command=on_submit).pack(pady=(0,10))
-
-show_dataframe(df, tree) 
+vsb = ttk.Scrollbar(tree_frame, orient="vertical")
+hsb = ttk.Scrollbar(tree_frame, orient="horizontal")
+tree = ttk.Treeview(tree_frame,
+                    show="headings",
+                    yscrollcommand=vsb.set,
+                    xscrollcommand=hsb.set)
+vsb.config(command=tree.yview)
+hsb.config(command=tree.xview)
 
 vsb.pack(side="right", fill="y")
 hsb.pack(side="bottom", fill="x")
 tree.pack(fill="both", expand=True)
+# --- Define controls window ---
+controls = ttk.Frame(window)
+controls.pack(fill="x", padx=8, pady=8)
+# --- Input fields (bottom_left) ---
+left_frame = ttk.Frame(controls)
+left_frame.pack(side="left", fill="y", padx=10, pady=10)
+tk.Label(left_frame,
+         text="Search for top suppliers/countries:"
+).pack(padx=10, pady=(0,5))
+entry = tk.Entry(left_frame)
+entry.pack(padx=10, pady=(0,10))
+entry.focus_set()
 
+tk.Button(left_frame,
+          text="Submit",
+          command=on_submit
+).pack(padx=10, pady=(0,10))
+# --- Weight inputs (bottom_right) ---
+weights_frame = ttk.Frame(controls)
+weights_frame.pack(side="left", fill="y", padx=10, pady=10)
+weight_fields = weights # Defined default weights at SOF
+cols = 5
+weight_vars = {}
+for idx, name in enumerate(weight_fields):
+    col = idx // ((len(weight_fields) + cols - 1) // cols)
+    row = idx % ((len(weight_fields) + cols - 1) // cols)  
+    ttk.Label(weights_frame, text=f"{name}:").grid(row=row, column=col*2, sticky="e", padx=(0,6), pady=2)
+    var = tk.StringVar(value=str(weight_fields[name]))
+    ttk.Entry(weights_frame, textvariable=var, width=8).grid(row=row, column=col*2+1, sticky="w", pady=2)
+    weight_vars[name] = var
+# --- Show initial dataframe ---
+show_dataframe(df, tree) 
 window.mainloop()

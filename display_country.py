@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-def analysis(df, manual_adjustments=False, custom_weights_dict=None):
+def analysis(df, top_N, manual_adjustments=False, custom_weights_dict=None):
     """
     Analyses the coffee ratings data to find the top recommended countries to 
     source coffee from. Each country is given a final score based on a weighted 
@@ -45,7 +45,7 @@ def analysis(df, manual_adjustments=False, custom_weights_dict=None):
     # 3. Handle User Adjustments
     if custom_weights_dict:
         weights = custom_weights_dict
-    elif manual_adjustments:
+    elif manual_adjustments: # Testing purpose(s)
         print("\n--- Custom Weighting Configuration ---")
         print("Press 'Enter' to keep the default weight, or type a number (e.g., 1.5 or 0.5)")
         for metric in weights.keys():
@@ -103,4 +103,4 @@ def analysis(df, manual_adjustments=False, custom_weights_dict=None):
         f.write("</body></html>")
 
     # 9. Return Top 5 for the terminal/main script
-    return full_report.head(5)
+    return full_report.head(top_N)
