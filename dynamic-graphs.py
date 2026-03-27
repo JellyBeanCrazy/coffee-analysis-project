@@ -142,7 +142,7 @@ def scatter(df,
 def worldmap(df,
              figsize=(6, 4),
              dpi=200):
-      """
+    """
     Creates a world heatmap where each country is shaded based on a score.
     The darker the colour, the higher the value for that country. Currently 
     uses dummy/random data as a placeholder until the real coffee data is 
