@@ -45,6 +45,21 @@ bar_columns = ['species',
               'variety',
               'processing_method']
 
+scatter_columns = [f"{a} vs. {b}"
+                   for i,a in enumerate(histogram_columns)
+                   for b in histogram_columns[i+1:]
+                   ]
+
+
+# --- Helper function(s) ---
+def parse_pair(pair_str):
+    left, sep, right = pair_str.partition(" vs. ")
+    if sep == "":
+        # try other separators or raise
+        left, sep, right = pair_str.partition(" vs ")
+    return left.strip(), right.strip()
+
+# --- Figure plotting function(s) ---
 def histogram(data,
               col,
               bins=100,
@@ -52,28 +67,28 @@ def histogram(data,
               dpi=100,
               color="#4C72C0"):
       """
-    Creates a histogram chart for a given column of data. A histogram shows 
-    how frequently different values appear — for example, how many coffees 
-    scored between 7 and 8 for aroma. The bars are grouped into ranges, and 
-    the taller the bar, the more coffees fall within that range.
+Creates a histogram chart for a given column of data. A histogram shows
+how frequently different values appear — for example, how many coffees
+scored between 7 and 8 for aroma. The bars are grouped into ranges, and
+the taller the bar, the more coffees fall within that range.
 
-    Parameters:
-        data: The column of numerical data to plot.
-        col (str): The name of the column, used as the chart title and x-axis label.
-        bins (int): The number of bars to divide the data into. Default is 100.
-        figsize (tuple): The width and height of the chart in inches. Default is (5, 4).
-        dpi (int): The resolution of the chart. Default is 100.
-    """
-    fig = Figure(figsize=figsize, dpi=dpi)
-    ax = fig.add_subplot(111)
-    ax.hist(data, bins=bins, color=color, edgecolor="black", alpha=0.8)
-    ax.set_title(f"Distribution of {col}")
-    ax.set_xlabel(col)
-    ax.set_ylabel("Count")
-    ax.grid(axis="y", alpha=0.3)
-    fig.tight_layout()
+Parameters:
+      data: The column of numerical data to plot.
+      col (str): The name of the column, used as the chart title and x-axis label.
+      bins (int): The number of bars to divide the data into. Default is 100.
+      figsize (tuple): The width and height of the chart in inches. Default is (5, 4).
+      dpi (int): The resolution of the chart. Default is 100.
+      """
+      fig = Figure(figsize=figsize, dpi=dpi)
+      ax = fig.add_subplot(111)
+      ax.hist(data, bins=bins, color=color, edgecolor="black", alpha=0.8)
+      ax.set_title(f"Distribution of {col}")
+      ax.set_xlabel(col)
+      ax.set_ylabel("Count")
+      ax.grid(axis="y", alpha=0.3)
+      fig.tight_layout()
 
-    return fig
+      return fig
 
 def bar_chart(data,
               col,
@@ -104,6 +119,26 @@ def bar_chart(data,
     fig.tight_layout()
     return fig
 
+def scatter(df,
+            x_col, y_col,
+            figsize=(5,4),
+            dpi=100,
+            color="#4C72C0",
+            alpha=0.7,
+            size=20):
+    fig = Figure(figsize=figsize, dpi=dpi)
+    ax = fig.add_subplot(111)
+    x = pd.to_numeric(df[x_col], errors="coerce")
+    y = pd.to_numeric(df[y_col], errors="coerce")
+    mask = x.notna() & y.notna()
+    ax.scatter(x[mask], y[mask], c=color, alpha=alpha, s=size, edgecolor="black", linewidth=0.2)
+    ax.set_title(f"{x_col} vs. {y_col}")
+    ax.set_xlabel(x_col)
+    ax.set_ylabel(y_col)
+    ax.grid(alpha=0.3)
+    fig.tight_layout()
+    return fig
+
 def worldmap(df,
              figsize=(6, 4),
              dpi=200):
@@ -116,62 +151,60 @@ def worldmap(df,
     Parameters:
         figsize (tuple): The width and height of the chart in inches. Default is (6, 4).
         dpi (int): The resolution of the chart. Default is 200.
-    """
-    # Load world countries from URL (no geodatasets needed)
-    world_map = gpd.read_file(
-        "https://naturalearth.s3.amazonaws.com/110m_cultural/ne_110m_admin_0_countries.zip"
-    )
-    #print(world_map)
-    #print(world_map.columns.tolist())
-    #print(sorted(world_map['NAME'].unique()))
-    
-    def normalize_name(s): # Normalize names for better matching
-        return (
-            str(s)
-            .strip()
-            .replace("United States (Hawaii)", "United States of America")
-            .replace("United States (Puerto Rico)", "Puerto Rico")
-            .replace("Tanzania, United Republic Of", "Tanzania")
-            .replace("Cote d?Ivoire", "Côte d'Ivoire")
-            .lower()
-        )
-    # normalize the world names to create a join key
-    world_map['key'] = world_map['NAME'].map(lambda x: normalize_name(x))
-    df = df.copy() # CIA safety
-    df['country_key'] = df['country_of_origin'].map(lambda x: normalize_name(x))
-    counts = df["country_key"].value_counts()               # absolute
-    norm_counts = df["country_key"].value_counts(normalize=True)  # relative
-    #print(counts)
-    #print(norm_counts)
-    
-    # convert counts to DataFrame for merging
-    counts_df = counts.rename_axis("key").reset_index(name="count")
-    norm_counts_df = norm_counts.rename_axis("key").reset_index(name="proportion")
-    merged = world_map.merge(counts_df, on='key', how='left')
-    merged = merged.merge(norm_counts_df, on='key', how='left')
-    merged['count'] = merged['count'].fillna(0).astype(int)
-    merged['proportion'] = merged['proportion'].fillna(0.0)
-    
-    fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+      """
+      # Load world countries from URL (no geodatasets needed)
+      world_map = gpd.read_file(
+            "https://naturalearth.s3.amazonaws.com/110m_cultural/ne_110m_admin_0_countries.zip"
+            )
+      #print(world_map)
+      #print(world_map.columns.tolist())
+      #print(sorted(world_map['NAME'].unique()))
 
-    merged.plot(
-        column='count',  # 'count' or 'proportion'
-        cmap='Reds',
-        legend=True,
-        ax=ax,
-        edgecolor='black',
-        linewidth=0.2,
-        legend_kwds={'shrink': 0.5}
-    )
+      def normalize_name(s): # Normalize names for better matching
+            return (
+                  str(s)
+                  .strip()
+                  .replace("United States (Hawaii)", "United States of America")
+                  .replace("United States (Puerto Rico)", "Puerto Rico")
+                  .replace("Tanzania, United Republic Of", "Tanzania")
+                  .replace("Cote d?Ivoire", "Côte d'Ivoire")
+                  .lower()
+              )
 
-    ax.set_title('World Heatmap')
-    ax.set_aspect('equal')   # or 'equal' if you want equal x/y scaling
-    ax.axis('off')
+      # normalize the world names to create a join key
+      world_map['key'] = world_map['NAME'].map(lambda x: normalize_name(x))
+      df = df.copy() # CIA safety
+      df['country_key'] = df['country_of_origin'].map(lambda x: normalize_name(x))
+      counts = df["country_key"].value_counts()               # absolute
+      norm_counts = df["country_key"].value_counts(normalize=True)  # relative
+      #print(counts)
+      #print(norm_counts)
 
-    fig.tight_layout()
-    return fig
+      # convert counts to DataFrame for merging
+      counts_df = counts.rename_axis("key").reset_index(name="count")
+      norm_counts_df = norm_counts.rename_axis("key").reset_index(name="proportion")
+      merged = world_map.merge(counts_df, on='key', how='left')
+      merged = merged.merge(norm_counts_df, on='key', how='left')
+      merged['count'] = merged['count'].fillna(0).astype(int)
+      merged['proportion'] = merged['proportion'].fillna(0.0)
 
-  
+      fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+      merged.plot(
+            column='count',  # 'count' or 'proportion'
+            cmap='Reds',
+            legend=True,
+            ax=ax,
+            edgecolor='black',
+            linewidth=0.2,
+            legend_kwds={'shrink': 0.5}
+      )
+
+      ax.set_title('World Heatmap')
+      ax.set_aspect('equal')   # or 'equal' if you want equal x/y scaling
+      ax.axis('off')
+      fig.tight_layout()
+      return fig
+
 def plot():
     """
     Reads the column selected by the user from the dropdown menu and generates 
@@ -183,7 +216,7 @@ def plot():
     for child in window.winfo_children():
         if isinstance(child, tk.Canvas):
             child.destroy()
-            
+  
     # Read combobox variable
     plot_type = n1.get()
     col = n2.get() or plotchoosen.get()  
@@ -192,11 +225,14 @@ def plot():
 
     if plot_type == "Histogram":
         data = pd.to_numeric(df[col], errors="coerce").dropna()
-        fig = histogram(data, col)
+        fig = histogram(data, col, dpi=150)
     elif plot_type == "Bar Chart":
-        fig = bar_chart(df, col, top_n=None)
+        fig = bar_chart(df, col, top_n=None, figsize=(8,5), dpi=80)
     elif plot_type == "World Heat Map":
-        fig = worldmap(df)
+        fig = worldmap(df, dpi=250)
+    elif plot_type == "Scatter Plot":
+        x_col, y_col = parse_pair(col)
+        fig = scatter(df, x_col, y_col)
     else:
         raise ValueError(f"Unsupported plot type [{plot_type}]\nFor charting [{col}]")
 
@@ -222,7 +258,8 @@ plot_choosen = ttk.Combobox(hbox,
                            width = 20,
                            textvariable = n1,
                            state="readonly")
-plot_choosen['values'] = ('World Heat Map', 'Histogram', "Bar Chart")
+plot_choosen['values'] = ('World Heat Map', 'Histogram',
+                          "Bar Chart", "Scatter Plot")
 plot_choosen.current(0)
 plot_choosen.pack(side="left", padx=(0,12))
 
@@ -237,6 +274,8 @@ def update_statistic_values(*_):
         values = histogram_columns
     elif selected == 'Bar Chart':
         values = bar_columns
+    elif selected == 'Scatter Plot':
+        values = scatter_columns
     else:
         values = []
     #print(values)
